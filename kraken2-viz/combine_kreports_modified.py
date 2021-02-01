@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 ################################################################
 # combine_kreports_modified.py takes multiple kraken-style kraken2 
-# or braken reports and combines them into a single report file
+# or bracken reports and combines them into a single report file
 #
 # MODIFIED AFTER combine_kreports.py from KrakenTools by
 # Jennifer Lu under this link:
@@ -14,7 +14,7 @@
 # Rebecca Ansorge, rebecca.ansorge@quadram.ac.uk
 # Modified: 01/02/2021
 #
-# This program reads in multiple Kraken2 or Braken report files and generates
+# This program reads in multiple Kraken2 or bracken report files and generates
 # a combined Kraken report with columns for read counts 
 #
 # Parameters:
@@ -23,7 +23,7 @@
 #   -o X, --output X..........output kraken report filename
 #   --sample-names............sample names for each kraken report (separated by spaces)
 #                             [if none are given, each sample named from input report file name]
-#   --braken..................Set this for braken input - omits representation of unclassified fraction
+#   --bracken..................Set this for bracken input - omits representation of unclassified fraction
 #   --single-tax-level........Set this to create single tables for each major taxonomic level 
 #                             in addition to overall merged report
 # Each Input report file format (tab-delimited)
@@ -133,9 +133,9 @@ def main():
         help='Output kraken report file with combined information')
     parser.add_argument('--sample-names',required=False,nargs='+',
         dest='s_names',default=[],help='Sample names to use as headers in the new report')
-    parser.add_argument('--braken',required=False,dest='braken',
+    parser.add_argument('--bracken',required=False,dest='bracken',
         action='store_true', default=False,
-        help='Set this for braken input - omits representation of unclassified fraction')
+        help='Set this for bracken input - omits representation of unclassified fraction')
     parser.add_argument('--single-tax-level',required=False,dest='singletaxa',
         action='store_true', default=False,
         help='Set this to create single tables for each taxonomic level')
@@ -253,11 +253,11 @@ def main():
     o_file.write("lvl_type\ttaxid\tname\n")
     #################################################
     # STEP 3a: PRINT TREE
-    if args.braken:
-        print(">>NOTE: braken input (--braken) - ignore unclassified")
+    if args.bracken:
+        print(">>NOTE: bracken input (--bracken) - ignore unclassified")
     sys.stdout.write(">>STEP 3a: PRINTING OVERALL REPORT\n")
     # Print line for unclassified reads
-    if args.braken:
+    if args.bracken:
         pass
     else:
         for i in u_reads:
@@ -307,7 +307,7 @@ def main():
                 # STEP 3: PRINT TREE
                 sys.stdout.write(">>STEP 3b: PRINTING SEPARATE REPORTS PER TAXONMIC LEVEL \n")
                 # Print line for unclassified reads
-                if args.braken:
+                if args.bracken:
                     pass
                 else:
                     for i in u_reads:

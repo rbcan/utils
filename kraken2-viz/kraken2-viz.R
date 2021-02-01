@@ -3,7 +3,7 @@
 #' author: "Andrea Telatin & Rebecca Ansorge"
 #' date: "15/01/2021"
 #' params:
-#'     inbraken: ""
+#'     inbracken: ""
 #'     inkraken: ""
 #'     outdir: ""
 #'     topspecies: ""
@@ -40,7 +40,7 @@ theme_set(theme_bw())
 # Create a parser
 par <- arg_parser("kraken2 visualisation - report")
 # Add command line arguments
-par <- add_argument(par, "--inbraken", help="merged braken input file", default=params$inbraken)
+par <- add_argument(par, "--inbracken", help="merged bracken input file", default=params$inbracken)
 par <- add_argument(par, "--inkraken", help="merged kraken input file", default=params$inkraken)
 par <- add_argument(par, "--outdir", help="output directory", default=params$outdir)
 par <- add_argument(par, "--topspecies", help="the number of top species to be displayes", default=params$topspecies)
@@ -54,7 +54,7 @@ argv <- parse_args(par)
 ### FILE IMPORT AND FORMATTING ###
 
 # import files
-b_data <- read_delim(argv$inbraken, delim="\t", comment= "#") %>%
+b_data <- read_delim(argv$inbracken, delim="\t", comment= "#") %>%
   mutate(name = gsub("^\\s+","",name))
 
 k_data <- read_delim(argv$inkraken, delim="\t", comment= "#") %>%
@@ -69,7 +69,7 @@ setwd(file.path(argv$outdir))
 tax_lvl <- c("D","P","C","O","F","G","S")
 tax_lvl2 <- c("Domain","Phylum","Class","Order","Family","Genus","Species")
 
-# split braken table into one dataframe per taxonomic level
+# split bracken table into one dataframe per taxonomic level
 taxlist<- lapply(tax_lvl, function(i) {
   tmp <- b_data %>%
     subset(lvl_type==i)
@@ -177,7 +177,7 @@ p_uncl2
 
 #' ## 2. Top species
 
-#' Retrieved from **braken** re-estimated read counts 
+#' Retrieved from **bracken** re-estimated read counts 
 
 #' The top 10 species per sample are shown, the remaining species in a sample were summed into the "a_other" category
 #'
@@ -300,7 +300,7 @@ p_dendro
 
 #' ## 5. Taxa abundances
 #' 
-#' Read count are shown for each taxonomic level. Kraken2 classification was re-estimated using **braken**.
+#' Read count are shown for each taxonomic level. Kraken2 classification was re-estimated using **bracken**.
 
 #+ echo=FALSE
 plotlist<- htmltools::tagList(lapply(seq_along(taxlist), function(ii) {

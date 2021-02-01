@@ -1,1 +1,1 @@
-Rscript render.R --inbraken braken-merged --inkraken kraken-merged -o ./
+Rscript render.R --inbracken bracken-merged.report --inkraken kraken2-merged.report -o ./
