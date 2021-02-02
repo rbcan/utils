@@ -9,19 +9,19 @@ Check out the different options with
 
 To merge kraken2 report files (using all *.report files):
 
-    ./combine_kreports_new.py -r *.report -o kraken2-merged.report
+    ./combine_kreports_modified.py -r *.report -o kraken2-merged.report
 
 To merge bracken report files (using all *.report files):
 
-    ./combine_kreports_new.py -r *.report -o bracken-merged.report --bracken
+    ./combine_kreports_modified.py -r *.report -o bracken-merged.report --bracken
 
 To merge kraken2 report files (using all *.report files) and in addition to merged report also obtain a separate report for each taxonomic level ('kingdom':'K', 'superkingdom':'D','phylum':'P','class':'C','order':'O','family':'F','genus':'G','species':'S'):
 
-    ./combine_kreports_new.py -r *.report -o kraken2-merged.report --single-tax-level
+    ./combine_kreports_modified.py -r *.report -o kraken2-merged.report --single-tax-level
 
 To merge bracken report files (using all *.report files) and in addition to merged report also obtain a separate report for each taxonomic level ('kingdom':'K', 'superkingdom':'D','phylum':'P','class':'C','order':'O','family':'F','genus':'G','species':'S'):
 
-    ./combine_kreports_new.py -r *.report -o bracken-merged.report --bracken --single-tax-level
+    ./combine_kreports_modified.py -r *.report -o bracken-merged.report --bracken --single-tax-level
 
 
 ## 2. Visualise profiles
