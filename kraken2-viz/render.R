@@ -24,4 +24,4 @@ inkraken_file
 xxx<-file_path_as_absolute(argv$outdir)
 xxx
 
-rmarkdown::render("../kraken2-viz_modified.R", params=list(inbracken=inbracken_file, inkraken=inkraken_file, topspecies=argv$topspecies, outdir=xxx), output_dir=argv$outdir)
+rmarkdown::render("kraken2-viz.R", params=list(inbracken=inbracken_file, inkraken=inkraken_file, topspecies=argv$topspecies, outdir=xxx), output_dir=argv$outdir)
