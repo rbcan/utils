@@ -5,8 +5,8 @@
 #' params:
 #'     inbracken: ""
 #'     inkraken: ""
-#'     outdir: ""
 #'     topspecies: ""
+#'     outdir: ""
 #' output: 
 #'     html_document:
 #'         fig_width: 10
@@ -34,19 +34,14 @@ library("rmarkdown")
 #  cat("pandoc", as.character(pandoc_version()), "is available!\n")
 #Sys.setenv(RSTUDIO_PANDOC="/Applications/RStudio.app/Contents/MacOS/pandoc")
 
-
 theme_set(theme_bw())
 
-# Create a parser
-par <- arg_parser("kraken2 visualisation - report")
-# Add command line arguments
-par <- add_argument(par, "--inbracken", help="merged bracken input file", default=params$inbracken)
-par <- add_argument(par, "--inkraken", help="merged kraken input file", default=params$inkraken)
-par <- add_argument(par, "--outdir", help="output directory", default=params$outdir)
-par <- add_argument(par, "--topspecies", help="the number of top species to be displayes", default=params$topspecies)
+# input arguments
+k2In<-params$inkraken
+bIn<-params$inbracken
+topS<-params$topspecies
+outDir<-params$outdir
 
-# Parse the command line arguments
-argv <- parse_args(par)
 ##################################
 
 
@@ -54,16 +49,15 @@ argv <- parse_args(par)
 ### FILE IMPORT AND FORMATTING ###
 
 # import files
-b_data <- read_delim(argv$inbracken, delim="\t", comment= "#") %>%
-  mutate(name = gsub("^\\s+","",name))
+b_data <- read_delim(bIn, delim="\t", comment= "#") %>%
+  mutate(name = gsub("^\\s+","",name)) %>%
+  filter(rowSums(.[,1:(ncol(.)-3)])>0) # filtering out rows where counts are 0 for all samples
 
-k_data <- read_delim(argv$inkraken, delim="\t", comment= "#") %>%
+k_data <- read_delim(k2In, delim="\t", comment= "#") %>%
   mutate(name = gsub("^\\s+","",name)) %>%
   filter(lvl_type == "R" | lvl_type == "U") %>%
   gather(key="sample",value="reads", -c("lvl_type","taxid","name"))
 
-# set working directory
-setwd(file.path(argv$outdir))
 
 # taxa level categories
 tax_lvl <- c("D","P","C","O","F","G","S")
@@ -73,7 +67,7 @@ tax_lvl2 <- c("Domain","Phylum","Class","Order","Family","Genus","Species")
 taxlist<- lapply(tax_lvl, function(i) {
   tmp <- b_data %>%
     subset(lvl_type==i)
-  write_delim(tmp,paste(i,"_abundances.tsv"),delim="\t")
+  write_delim(tmp,paste(outDir,"/",i,"_abundances.tsv",sep=""),delim="\t")
   tmp<- tmp %>%
     gather(key="sample",value="reads", -c("lvl_type","taxid","name"))
   tmp 
@@ -100,13 +94,13 @@ for (i in samples) {
     subset(lvl_type=="S") %>%
     select(c(i,"taxid")) %>%
     arrange(desc(.[,1])) %>%
-    slice(1:argv$topspecies) %>%
+    slice(1:topS) %>%
     na_if(0)
   y <- b_data %>%
     subset(lvl_type=="S") %>%
     select(c(i,"taxid")) %>%
     arrange(desc(.[,1])) %>%
-    slice((argv$topspecies+1):n()) %>%
+    slice((topS+1):n()) %>%
     summarize(sum=sum(.[,1])) %>%
     rename_with(.fn = ~paste0(i)) %>%
     mutate(taxid="0000") 
@@ -193,7 +187,7 @@ ptop <- ggplot(tops) +
   geom_bar(stat="identity",aes(x=sample,y=reads, fill=name)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.title = element_blank()) +
-  ggtitle(paste("Top", argv$topspecies,"species per sample"))
+  ggtitle(paste("Top", topS,"species per sample"))
 #ggplotly(ptop,height = 400, width=panel2)
 p_ptop<-ggplotly(ptop)
 p_ptop
@@ -204,7 +198,7 @@ ptop2 <- ggplot(tops) +
   geom_bar(stat="identity",aes(x=sample,y=reads, fill=name), position="fill") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.title = element_blank()) +
-  ggtitle(paste("Top", argv$topspecies,"species per sample"))
+  ggtitle(paste("Top", topS,"species per sample"))
 #ggplotly(ptop2, height=400, width=panel2)
 p_ptop2<-ggplotly(ptop2)
 p_ptop2
@@ -217,7 +211,7 @@ ptop3 <- ggplot(tops) +
   geom_point(aes(x=sample,y=name, size=reads, color=reads), alpha = 0.7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_size_continuous(limits = c(0.00001,max(tops$reads)))+
-  ggtitle(paste("Top", argv$topspecies,"species per sample"))
+  ggtitle(paste("Top", topS,"species per sample"))
 #ggplotly(ptop3,height = panel, width=panel2)
 p_ptop3<-ggplotly(ptop3,height = panel)
 p_ptop3
@@ -228,7 +222,7 @@ ptop4 <- ggplot(tops2) +
   geom_point(aes(x=sample,y=name, size=reads, color=reads), alpha = 0.7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_size_continuous(limits = c(0.00001,max(tops$reads)))+
-  ggtitle(paste("Top", argv$topspecies,"species per sample"))
+  ggtitle(paste("Top", topS,"species per sample"))
 #ggplotly(ptop4,height = panel, width=panel2)
 p_ptop4<-ggplotly(ptop4,height = panel)
 p_ptop4
@@ -251,22 +245,28 @@ speclist <- b_data %>%
   select(-c("lvl_type","taxid","name"))
 speclist <- apply(speclist,2,function(x){x/sum(x)})
 
-invisible(o_nmds <-metaMDS(speclist, distance="bray", k=3, try = 50))
-
-o_nmds_data<-as.data.frame(o_nmds$species) %>%
-  rownames_to_column("sample")
+o_nmds <- NULL
+try(invisible(o_nmds <-metaMDS(speclist, distance="bray", k=3)), silent=TRUE)
 
 #+ echo=FALSE
-paste("NMDS stress:",round(o_nmds$stress,4))
-
-p_nmds <- plot_ly(o_nmds_data, x = ~MDS1, y = ~MDS2, z = ~MDS3,
-               type="scatter3d", mode="text", 
-               text = ~sample)
-p_nmds <- p_nmds %>% add_markers()
-p_nmds <- p_nmds %>% layout(scene = list(xaxis = list(title = 'MDS1'),
-                                   yaxis = list(title = 'MDS2'),
-                                   zaxis = list(title = 'MDS3')))
-p_nmds
+if (is(o_nmds,"metaMDS")) {
+  o_nmds_data<-as.data.frame(o_nmds$species) %>%
+    rownames_to_column("sample")
+  
+  # #+ echo=FALSE
+  paste("NMDS stress:",round(o_nmds$stress,4))
+  
+  p_nmds <- plot_ly(o_nmds_data, x = ~MDS1, y = ~MDS2, z = ~MDS3,
+                    type="scatter3d", mode="text", 
+                    text = ~sample)
+  p_nmds <- p_nmds %>% add_markers()
+  p_nmds <- p_nmds %>% layout(scene = list(xaxis = list(title = 'MDS1'),
+                                           yaxis = list(title = 'MDS2'),
+                                           zaxis = list(title = 'MDS3')))
+  p_nmds
+} else {
+  print("Caught an error during NMDS generation - skipping ordination")
+}
 ##################################
 
 
@@ -384,20 +384,21 @@ plotlist2[[1]][[7]]
 ##### EXPORT PLOT HTML FILES #####
 
 #+ echo=FALSE
-htmlwidgets::saveWidget(as_widget(p_uncl),"p_uncl.html")
-htmlwidgets::saveWidget(as_widget(p_uncl2),"p_uncl2.html")
-htmlwidgets::saveWidget(as_widget(p_ptop),"p_ptop.html")
-htmlwidgets::saveWidget(as_widget(p_ptop2),"p_ptop2.html")
-htmlwidgets::saveWidget(as_widget(p_ptop3),"p_ptop3.html")
-htmlwidgets::saveWidget(as_widget(p_ptop4),"p_ptop4.html")
-htmlwidgets::saveWidget(as_widget(p_nmds),"p_nmds.html")
-ggsave("p_dendro.png",p_dendro)
+
+htmlwidgets::saveWidget(as_widget(p_uncl),paste(outDir,"/p_uncl.html",sep=""))
+htmlwidgets::saveWidget(as_widget(p_uncl2),paste(outDir,"/p_uncl2.html",sep=""))
+htmlwidgets::saveWidget(as_widget(p_ptop),paste(outDir,"/p_ptop.html",sep=""))
+htmlwidgets::saveWidget(as_widget(p_ptop2),paste(outDir,"/p_ptop2.html",sep=""))
+htmlwidgets::saveWidget(as_widget(p_ptop3),paste(outDir,"/p_ptop3.html",sep=""))
+htmlwidgets::saveWidget(as_widget(p_ptop4),paste(outDir,"/p_ptop4.html",sep=""))
+try(htmlwidgets::saveWidget(as_widget(p_nmds),paste(outDir,"/p_nmds.html",sep="")),silent=TRUE)
+ggsave(paste(outDir,"/p_dendro.png",sep=""),p_dendro)
 ##################################
 
 
 #### EXPORT PLOT PDF FILES ####
 
-pdf("high_res_figs.pdf")
+pdf(paste(outDir,"/high_res_figs.pdf",sep=""))
 uncl
 uncl2
 ptop
@@ -410,13 +411,13 @@ dev.off()
 
 ####### EXPORT DATA TABLES #######
 # top 10 species per sample (counts)
-write_delim(topspec,"top_species.tsv",delim="\t")
+write_delim(topspec,paste(outDir,"/top_species.tsv",sep=""),delim="\t")
 # top 10 species per sample (relative)
-write_delim(as.data.frame(topspec2),"top_species_relative.tsv",delim="\t")
+write_delim(as.data.frame(topspec2),paste(outDir,"/top_species_relative.tsv",sep=""),delim="\t")
 # relative abundances of species matrix (basis for NMDS and dendrogram)
-write_delim(as.data.frame(speclist),"species_relabundance_matrix.tsv",delim="\t")
+write_delim(as.data.frame(speclist),paste(outDir,"/species_relabundance_matrix.tsv",sep=""),delim="\t")
 # NMDS coordinates
-write_delim(o_nmds_data,"NMDS_data.tsv",delim="\t")
+try(write_delim(o_nmds_data,paste(outDir,"/NMDS_data.tsv",sep=""),delim="\t"),silent=TRUE)
 
 ##################################
 
