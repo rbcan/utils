@@ -22,11 +22,10 @@
 #+ include=FALSE
 ####### FIRST THINGS FIRST #######
 library("tidyverse")
-library("plotly")
+library("plotly") 
 library("RColorBrewer")
-library("vegan")
-library("argparser")
-library("ggdendro")
+library("vegan") #
+library("ggdendro") # 
 library("htmltools")
 library("rmarkdown")
 
