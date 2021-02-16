@@ -127,7 +127,7 @@ tops2 <-topspec3 %>%
 
 # set dimentsions of plots
 panel<-((nrow(topspec)*25))*1
-panel2<-((ncol(topspec)-3)*30+100)*1
+if (panel<350){panel<-350}
 ##################################
 
 
@@ -154,13 +154,11 @@ uncl2 <- ggplot(k_data) +
 
 #' ### absolute counts
 #+ echo=FALSE
-#ggplotly(uncl,height = 400, width=panel2)
 p_uncl<-ggplotly(uncl)
 p_uncl
 
 #' ### relative
 #+ echo=FALSE
-#ggplotly(uncl2,height = 400, width=panel2)
 p_uncl2<-ggplotly(uncl2)
 p_uncl2
 ##################################
@@ -187,7 +185,6 @@ ptop <- ggplot(tops) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.title = element_blank()) +
   ggtitle(paste("Top", topS,"species per sample"))
-#ggplotly(ptop,height = 400, width=panel2)
 p_ptop<-ggplotly(ptop)
 p_ptop
 
@@ -198,7 +195,6 @@ ptop2 <- ggplot(tops) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.title = element_blank()) +
   ggtitle(paste("Top", topS,"species per sample"))
-#ggplotly(ptop2, height=400, width=panel2)
 p_ptop2<-ggplotly(ptop2)
 p_ptop2
 
@@ -211,7 +207,6 @@ ptop3 <- ggplot(tops) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_size_continuous(limits = c(0.00001,max(tops$reads)))+
   ggtitle(paste("Top", topS,"species per sample"))
-#ggplotly(ptop3,height = panel, width=panel2)
 p_ptop3<-ggplotly(ptop3,height = panel)
 p_ptop3
 
@@ -222,7 +217,6 @@ ptop4 <- ggplot(tops2) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_size_continuous(limits = c(0.00001,max(tops$reads)))+
   ggtitle(paste("Top", topS,"species per sample"))
-#ggplotly(ptop4,height = panel, width=panel2)
 p_ptop4<-ggplotly(ptop4,height = panel)
 p_ptop4
 ##################################
@@ -308,7 +302,6 @@ plotlist<- htmltools::tagList(lapply(seq_along(taxlist), function(ii) {
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
           legend.title = element_blank()) +
     ggtitle(tax_lvl2[ii])
-  #as_widget(ggplotly(tmp2,height = 400, width=panel2))
   as_widget(ggplotly(tmp2))
 }))
 
@@ -318,7 +311,6 @@ plotlist2<- htmltools::tagList(lapply(seq_along(taxlist), function(ii) {
     theme(axis.text.x = element_text(angle = 45, hjust = 1),
           legend.title = element_blank()) +
     ggtitle(tax_lvl2[ii])
-  #as_widget(ggplotly(tmp3,height = 400, width=panel2))
   as_widget(ggplotly(tmp3))
 }))
 
