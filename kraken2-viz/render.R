@@ -20,9 +20,11 @@ par <- add_argument(par, "--outdir", help="output directory", default="./")
 # Parse the command line arguments
 argv <- parse_args(par)
 
-if (pandoc_available())
+if (pandoc_available()) {
   cat("pandoc", as.character(pandoc_version()), "is available!\n")
-Sys.setenv(RSTUDIO_PANDOC="/Applications/RStudio.app/Contents/MacOS/pandoc")
+  } else {
+  stop("oops, pandoc is not available - please set RSTUDIO_PANDOC\n")
+  }
 
 inbracken_file<-file_path_as_absolute(argv$inbracken)
 inkraken_file<-file_path_as_absolute(argv$inkraken)
