@@ -41,6 +41,11 @@ bIn<-params$inbracken
 topS<-params$topspecies
 outDir<-params$outdir
 
+k2In<-"kraken2-merged.report"
+bIn<-"bracken-merged.report"
+topS<-10
+outDir<-"./"
+
 ##################################
 
 
@@ -81,43 +86,74 @@ samples <- names(b_data)[1:(l-3)]
 header <- names(b_data)[(l-2):l]
 
 # create table for top taxa
-df<-b_data[header] %>%
-  subset(lvl_type=="S")
-tmp<-data.frame("S","0000","a_other")
-names(tmp)<-header
+# df<-b_data[header] %>%
+#   subset(lvl_type=="S")
+# tmp<-data.frame("S","0000","a_other")
+# names(tmp)<-header
 
 # make top 10 taxa dataframe and sum all 'others'
-df<-rbind(df,tmp)
+topS_taxids<-data.frame()
 for (i in samples) {
-  x <- b_data %>%
-    subset(lvl_type=="S") %>%
-    select(c(i,"taxid")) %>%
-    arrange(desc(.[,1])) %>%
-    slice(1:topS) %>%
-    na_if(0)
-  y <- b_data %>%
-    subset(lvl_type=="S") %>%
-    select(c(i,"taxid")) %>%
-    arrange(desc(.[,1])) %>%
-    slice((topS+1):n()) %>%
-    summarize(sum=sum(.[,1])) %>%
-    rename_with(.fn = ~paste0(i)) %>%
-    mutate(taxid="0000") 
-  print(head(x))
-  print(head(y))
-  z<-rbind(x,y)
-  print(tail(z))
-  df<-full_join(df,z,by="taxid")
+x<-b_data %>%
+  subset(lvl_type=="S") %>%
+  select(c(i,"taxid")) %>%
+  arrange(desc(.[,1])) %>%
+  slice(1:topS) %>%
+  na_if(0) %>%
+  select("taxid")
+topS_taxids<-rbind(topS_taxids,x)
 }
+topS_taxids<-unique(topS_taxids)
+
+toptaxa<-b_data %>% 
+  subset(lvl_type=="S") %>%
+  right_join(topS_taxids, by="taxid")
+
+other<-b_data %>% 
+  subset(lvl_type=="S") %>%
+  anti_join(topS_taxids, by="taxid") 
+otherS<-colSums(other[,1:length(samples)]) %>%
+  as.data.frame() %>%
+  t() %>%
+  as_tibble() %>%
+  mutate(lvl_type="S") %>%
+  mutate(taxid=0) %>%
+  mutate(name="a_other")
+
+df<-rbind(toptaxa,otherS)
+
+# df<-rbind(df,tmp)
+# for (i in samples) {
+#   x <- b_data %>%
+#     subset(lvl_type=="S") %>%
+#     select(c(i,"taxid")) %>%
+#     arrange(desc(.[,1])) %>%
+#     slice(1:topS) %>%
+#     na_if(0)
+#   y <- b_data %>%
+#     subset(lvl_type=="S") %>%
+#     select(c(i,"taxid")) %>%
+#     arrange(desc(.[,1])) %>%
+#     slice((topS+1):n()) %>%
+#     summarize(sum=sum(.[,1])) %>%
+#     rename_with(.fn = ~paste0(i)) %>%
+#     mutate(taxid="0000") 
+#   print(head(x))
+#   print(head(y))
+#   z<-rbind(x,y)
+#   print(tail(z))
+#   df<-full_join(df,z,by="taxid")
+# }
 
 # remove species that were not in top taxa in any sample - entire row has NA
 topspec <- df %>% filter_at(vars(all_of(samples)),any_vars(!is.na(.)))
 
 # make top species relative 
-topspec2<-topspec[,(4:length(topspec))]
+#topspec2<-topspec[,(4:length(topspec))]
+topspec2<-topspec[,1:length(samples)]
 topspec2[is.na(topspec2)] <- 0
 topspec2 <- apply(topspec2,2,function(x){x/sum(x)})
-topspec3 <- cbind((topspec[1:3]),topspec2)
+topspec3 <- cbind((topspec[(length(samples)+1):ncol(topspec)]),topspec2)
 tops2 <-topspec3 %>% 
   gather(key="sample",value="reads", -c("lvl_type","taxid","name"))
 ##################################
@@ -215,7 +251,7 @@ p_ptop3
 ptop4 <- ggplot(tops2) +
   geom_point(aes(x=sample,y=name, size=reads, color=reads), alpha = 0.7) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_size_continuous(limits = c(0.00001,max(tops$reads)))+
+  scale_size_continuous(limits = c(0.00001,max(tops2$reads)))+
   ggtitle(paste("Top", topS,"species per sample"))
 p_ptop4<-ggplotly(ptop4,height = panel)
 p_ptop4
