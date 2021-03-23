@@ -41,10 +41,10 @@ bIn<-params$inbracken
 topS<-params$topspecies
 outDir<-params$outdir
 
-k2In<-"kraken2-merged.report"
-bIn<-"bracken-merged.report"
-topS<-10
-outDir<-"./"
+#k2In<-"kraken2-merged.report"
+#bIn<-"bracken-merged.report"
+#topS<-10
+#outDir<-"./"
 
 ##################################
 
